@@ -14,7 +14,7 @@ class Enemy {
 
 //управление всей игрой
 class Game {
-
+  //2 этап конструктор 
 }
 
 document.addEventListener('load', function() {
