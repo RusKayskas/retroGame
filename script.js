@@ -18,15 +18,65 @@ class player {
     context.fillRect(this.x, this.y, this.width, this.height);
     
   }
+
   //для отображения движения игрока и тд
   update() {
-    this.x += this.speed;
+    if (this.game.keys.indexOf('a') > -1) this.x -= this.speed;
+    if (this.game.keys.indexOf('d') > -1) this.x += this.speed;
+    if (this.game.keys.indexOf('A') > -1) this.x -= this.speed;
+    if (this.game.keys.indexOf('D') > -1) this.x += this.speed;
+    if (this.game.keys.indexOf('s') > -1) this.y += this.speed;
+    if (this.game.keys.indexOf('S') > -1) this.y += this.speed;
+    if (this.game.keys.indexOf('w') > -1) this.y -= this.speed;
+    if (this.game.keys.indexOf('W') > -1) this.y -= this.speed;
+    // делаем что бы игрок не уходил за пределы игровой области
+    if (this.x < 0) this.x = 0;
+    else if (this.x > this.game.width - this.width) this.x = this.game.width - this.width
+    if (this.y < this.game.height / 2) this.y = this.game.height / 2;
+    else if (this.y > this.game.height - this.height ) this.y = this.game.height - this.height;
+  }
+  //этам 7 
+  shoot() {
+    const projectile = this.game.getProjectTile();
+    if (projectile) projectile.start(this.x, this.y);
   }
 }
 
-//тут создание снарядов и создание сетки и тд
+//тут создание снарядов и создание сетки и тд 
+//ЭТАП 7 стрельба
 class Projectile {
-  
+  constructor() {
+    //lazer
+    this.width = 4;
+    this.height = 20; 
+    this.x = 0;
+    this.y = 0;
+    this.speed = 20;
+    //показываем сняряд или нет
+    this.free = true;
+  }
+
+  draw(context) {
+    if (!this.free) {
+      context.fillRect(this.x, this.y, this.width, this.height)
+    }
+  }
+  update() {
+    if (!this.free) {
+      this.y -= this.speed;
+      //обновляем что бы было 10 пуль но они стирали свое значение после того как улетают за экран
+      if (this.y < -this.height) this.reset();
+    }
+  }
+  start(x , y) {
+    this.x = x;
+    this.y = y;
+    this.free = false;
+  }
+  //убираем обьект когда он не нужен
+  reset() {
+    this.free = true;
+  }
 }
 
 class Enemy {
@@ -47,19 +97,28 @@ class Game {
     //этап 4 создаем тут player
     this.player = new player(this);
 
+
+    //лимит 10 снярядов этап 7
+    this.projectTilesPool = [];
+    this.numberOfProjecTiles = 10;
+
+    //вызываем методы
+    this.createProjectTiles();
+    console.log(this.projectTilesPool);
+
     //управление игроком этап 6 
     window.addEventListener('keydown', (event) => {
       //метод что бы в массив не добавлялись одинаковые значения каждый раз при нажатии
       if (this.keys.indexOf(event.key) === -1) this.keys.push(event.key);
-      console.log(this.keys);
+      //стрельба этап 7
+      if (event.key === ' ') this.player.shoot(); //далее надо нарисовать это все и идем в render
     })
 
     //удаляем ключ и массива когда отпускаем кноппку
     window.addEventListener('keyup', (event) => {
       const index = this.keys.indexOf(event.key)
       //это выражегте означает если ключ есть внутри массива удаляем его 
-      if (index > -1)
-      console.log(this.keys);
+      if (index > -1) this.keys.splice(index, 1);
     })
 
   }
@@ -70,6 +129,25 @@ class Game {
     this.player.draw(context);
     //вызываем метод для движения игрока //этап 5 анимация
     this.player.update();
+
+    //выстрел этап 7
+    this.projectTilesPool.forEach(projectile => {
+      projectile.update();
+      projectile.draw(context);
+    })
+  }
+  
+  //этап 7 create projectiles object pool
+  createProjectTiles() {
+    for (let i = 0; i < this.numberOfProjecTiles; i++) {
+      this.projectTilesPool.push(new Projectile());
+    }
+  }
+  //get free projectile object from the pool
+  getProjectTile() {
+    for (let i = 0; i < this.projectTilesPool.length; i++) {
+      if(this.projectTilesPool[i].free) return this.projectTilesPool[i];
+    }
   }
 }
 
