@@ -38,7 +38,7 @@ class player {
   //этам 7 
   shoot() {
     const projectile = this.game.getProjectTile();
-    if (projectile) projectile.start(this.x, this.y);
+    if (projectile) projectile.start(this.x + this.width * 0.5, this.y);
   }
 }
 
@@ -47,7 +47,7 @@ class player {
 class Projectile {
   constructor() {
     //lazer
-    this.width = 4;
+    this.width = 10;
     this.height = 20; 
     this.x = 0;
     this.y = 0;
@@ -69,7 +69,7 @@ class Projectile {
     }
   }
   start(x , y) {
-    this.x = x;
+    this.x = x - this.width * 0.5;
     this.y = y;
     this.free = false;
   }
@@ -79,8 +79,46 @@ class Projectile {
   }
 }
 
+//этап 8
 class Enemy {
+  constructor(game) {
+    this.game = game;
+    this.width;
+    this.height;
+    this.x;
+    this.y;
+  }
+  draw(context) {
+    context.strokeRect(this.x, this.y, this.width, this.height);
+  }
+  update() {
 
+  }
+}
+//перемещение и смещение врагов к игроку
+class Wave {
+  constructor(game) {
+    //берем colums и тд из переменной game
+    this.game = game;
+    this.width = this.game.columns * this.game.enemySize;
+    this.height = this.game.rows * this.game.enemySize;
+    this.x = 0;
+    this.y = 0;
+    this.speedX = 3;
+    this.speedY = 0;
+  }
+  render(context) {
+    this.speedY = 0;
+    context.strokeRect(this.x, this.y, this.width, this.height);
+    // this.x += this.speedX;
+    //что бы не уходило за экран 
+    if (this.x < 0 || this.x > this.game.width - this.width) {
+      this.speedX *= -1;
+      this.speedY = this.game.enemySize;
+    }
+    this.x += this.speedX;
+    this.y += this.speedY;
+  }
 }
 
 //управление всей игрой
@@ -105,6 +143,15 @@ class Game {
     //вызываем методы
     this.createProjectTiles();
     console.log(this.projectTilesPool);
+
+
+    //этап 8 делаем сетку для врагов сколько их должно быть в пачке и тд 
+    this.columns = 3;
+    this.rows = 3;
+    this.enemySize  = 60;
+
+    this.waves = [];
+    this.waves.push(new Wave(this));
 
     //управление игроком этап 6 
     window.addEventListener('keydown', (event) => {
@@ -135,6 +182,11 @@ class Game {
       projectile.update();
       projectile.draw(context);
     })
+
+    //этап 8
+    this.waves.forEach(wave => {
+      wave.render(context);
+    })
   }
   
   //этап 7 create projectiles object pool
@@ -153,12 +205,14 @@ class Game {
 
 window.addEventListener('load', function() {
   //обьявляем переменные для работы в canvas этап 1
-  console.log('1');
   const canvas = document.getElementById('canvas_1');
   const ctx = canvas.getContext('2d');
   canvas.width = 600;
   canvas.height = 800;
   
+  ctx.fillStyle = 'white';
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 6;
 
   //как бы запускаем класс этап 3 и передаем canvas как аргумент
   const game = new Game(canvas);
